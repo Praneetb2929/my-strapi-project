@@ -1,3 +1,19 @@
+## Day 1 PR: Setup Strapi project with Article content type
+
+### 📦 What was done:
+
+- Created a new Strapi project using `npx create-strapi-app`
+- Set up admin panel at `localhost:1337`
+- Created "Article" collection type with the following fields:
+  - Title
+  - Body
+  - Author
+  - PublishedAt
+  - Image
+
+> This PR is for Day 1 progress. More updates will be added in future PRs
+
+
 # 🚀 Getting started with Strapi
 
 Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
