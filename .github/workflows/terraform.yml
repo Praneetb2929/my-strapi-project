@@ -23,5 +23,5 @@ jobs:
       working-directory: terraform/
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve -var="docker_image_url=${{ secrets.DOCKER_USERNAME }}/strapi-app:latest"
+      run: terraform apply -auto-approve -var=docker_image_url=${{ secrets.DOCKER_USERNAME }}/strapi-app:latest
       working-directory: terraform/
