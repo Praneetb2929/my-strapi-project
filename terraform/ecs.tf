@@ -2,18 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "docker_image_url" {
-  type = string
-}
-
-variable "subnet_ids" {
-  type = list(string)
-}
-
-variable "security_group_id" {
-  type = string
-}
-
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 
