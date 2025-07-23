@@ -20,6 +20,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: ./terraform
 
       - name: Terraform Apply
         run: |
@@ -30,4 +31,5 @@ jobs:
             -var="subnet_id=${{ secrets.SUBNET_ID }}" \
             -var="vpc_id=${{ secrets.VPC_ID }}" \
             -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+        working-directory: ./terraform
 
