@@ -1,27 +1,28 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 variable "docker_image_url" {
-  description = "Docker image URL for Strapi"
-  type        = string
+  type = string
 }
 
 variable "subnet_ids" {
-  description = "List of subnet IDs for ECS service"
-  type        = list(string)
+  type = list(string)
 }
 
 variable "security_group_id" {
-  description = "Security group ID for ECS service"
-  type        = string
+  type = string
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
         }
@@ -76,18 +77,19 @@ resource "aws_ecs_service" "strapi_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = var.subnet_ids
+    subnets          = var.subnet_ids
     assign_public_ip = true
     security_groups  = [var.security_group_id]
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.strapi_tg.arn
-    container_name   = "strapi"
-    container_port   = 1337
+  deployment_controller {
+    type = "ECS"
   }
 
-  depends_on = [aws_iam_role_policy_attachment.ecs_task_execution_role_policy]
+  # You can remove or uncomment this if using ALB:
+  # load_balancer {
+  #   target_group_arn = aws_lb_target_group.strapi_tg.arn
+  #   container_name   = "strapi"
+  #   container_port   = 1337
+  # }
 }
-
-
