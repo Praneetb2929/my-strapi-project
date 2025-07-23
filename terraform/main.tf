@@ -6,7 +6,7 @@ provider "aws" {
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = file(var.public_key_path)
+  public_key = var.public_key_content
 }
 
 resource "aws_security_group" "ec2_sg" {

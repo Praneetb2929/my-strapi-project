@@ -17,6 +17,11 @@ variable "docker_image_url" {
   description = "Docker image to pull and run"
 }
 
+variable "public_key_content" {
+  description = "SSH Public Key content"
+  type        = string
+}
+
 variable "subnet_id" {}
 variable "vpc_id" {}
 variable "public_key_path" {}

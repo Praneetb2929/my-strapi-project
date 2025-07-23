@@ -30,6 +30,6 @@ jobs:
             -var="docker_image_url=${{ secrets.DOCKER_IMAGE_URL }}" \
             -var="subnet_id=${{ secrets.SUBNET_ID }}" \
             -var="vpc_id=${{ secrets.VPC_ID }}" \
-            -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+            -var="public_key_content=${{ secrets.PUBLIC_KEY_CONTENT }}"
         working-directory: ./terraform
 
