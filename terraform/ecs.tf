@@ -1,9 +1,18 @@
-# ECS Cluster
-resource "aws_ecs_cluster" "strapi_cluster" {
-  name = "strapi-cluster"
+variable "docker_image_url" {
+  description = "Docker image URL for Strapi"
+  type        = string
 }
 
-# IAM Role for ECS Task Execution
+variable "subnet_ids" {
+  description = "List of subnet IDs for ECS service"
+  type        = list(string)
+}
+
+variable "security_group_id" {
+  description = "Security group ID for ECS service"
+  type        = string
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
 
@@ -11,45 +20,54 @@ resource "aws_iam_role" "ecs_task_execution_role" {
     Version = "2012-10-17",
     Statement = [
       {
+        Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
+        }
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# ECS Task Definition
-resource "aws_ecs_task_definition" "strapi_task" {
-  family                   = "strapi-task"
-  network_mode            = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                     = "512"
-  memory                  = "1024"
-  execution_role_arn      = aws_iam_role.ecs_task_execution_role.arn
-  container_definitions   = jsonencode([{
-    name      = "strapi"
-    image     = var.docker_image_url
-    essential = true
-    portMappings = [{
-      containerPort = 1337
-      protocol      = "tcp"
-    }]
-    environment = [{
-      name  = "DATABASE_CLIENT"
-      value = "sqlite" # or postgres
-    }]
-  }])
+resource "aws_ecs_cluster" "strapi_cluster" {
+  name = "strapi-cluster"
 }
 
-# ECS Service
+resource "aws_ecs_task_definition" "strapi_task" {
+  family                   = "strapi-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "strapi"
+      image     = var.docker_image_url
+      essential = true
+      portMappings = [
+        {
+          containerPort = 1337
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "DATABASE_CLIENT"
+          value = "sqlite"
+        }
+      ]
+    }
+  ])
+}
+
 resource "aws_ecs_service" "strapi_service" {
   name            = "strapi-service"
   cluster         = aws_ecs_cluster.strapi_cluster.id
@@ -69,6 +87,7 @@ resource "aws_ecs_service" "strapi_service" {
     container_port   = 1337
   }
 
-  depends_on = [aws_lb_target_group.strapi_tg]
+  depends_on = [aws_iam_role_policy_attachment.ecs_task_execution_role_policy]
 }
+
 
