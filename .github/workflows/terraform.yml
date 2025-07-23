@@ -1,7 +1,9 @@
 name: Deploy Strapi on EC2 using Terraform
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
