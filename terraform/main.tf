@@ -90,6 +90,7 @@ resource "aws_security_group" "strapi_sg" {
 # EC2 Key Pair - You must create this in AWS Console or import
 resource "aws_key_pair" "strapi_key" {
   key_name   = "strapi_key"
+public_key = file("C:/Users/KIIT0001/.ssh/strapi_key.pub") # Use absolute path for Windows
 
 }
 
