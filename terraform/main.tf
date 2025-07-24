@@ -88,7 +88,7 @@ resource "aws_security_group" "strapi_sg" {
 }
 
 # EC2 Key Pair - You must create this in AWS Console or import
-resource "aws_key_pair" "strapi_key" {
+resource "aws_key_pair" "for aws" {
   key_name   = "for aws"
 
 }
