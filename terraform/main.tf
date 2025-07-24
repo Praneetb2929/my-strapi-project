@@ -105,7 +105,7 @@ resource "aws_instance" "strapi_ec2" {
               apt update -y
               apt install docker.io -y
               systemctl start docker
-              docker run -d -p 80:1337 ${var.image_tag}
+              docker run -d -p 1337:1337 praneetz/your-image-name:latest
               EOF
 
   tags = {
