@@ -87,9 +87,7 @@ resource "aws_security_group" "strapi_sg" {
 # EC2 Key Pair - You must create this in AWS Console or import
 resource "aws_key_pair" "strapi_key" {
 key_name   = "strapi-key"
-public_key = <<EOF
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC+...your_actual_key...== kiit0001@BT06992
-EOF
+public_key = file("${path.module}/strapi-key.pub")
 
 }
 
