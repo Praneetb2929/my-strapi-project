@@ -3,6 +3,7 @@ name: Deploy with Terraform
 on:
   push:
     branches: [main]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,15 +12,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download image URL
-        uses: actions/download-artifact@v3
+      - name: Download image info
+        uses: actions/download-artifact@v4
         with:
           name: image-info
+          path: ./artifact
 
       - name: Read image.txt
         id: image
         run: |
-          IMAGE=$(cat image.txt | cut -d'=' -f2)
+          IMAGE=$(cat ./artifact/image.txt | cut -d'=' -f2)
           echo "IMAGE_URL=$IMAGE" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
@@ -34,10 +36,10 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      - name: Init Terraform
+      - name: Initialize Terraform
         run: terraform init
         working-directory: terraform
 
-      - name: Apply Terraform
+      - name: Apply Terraform with updated image
         run: terraform apply -auto-approve -var="image_url=${{ env.IMAGE_URL }}"
         working-directory: terraform
