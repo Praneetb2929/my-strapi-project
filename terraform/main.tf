@@ -2,115 +2,100 @@ provider "aws" {
   region = "us-east-1"
 }
 
-
-
-# Create VPC
-resource "aws_vpc" "strapi_vpc" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "strapi-vpc"
-  }
+resource "aws_ecr_repository" "strapi" {
+  name = "strapi-repo"
 }
 
-# Create Subnet
-resource "aws_subnet" "strapi_subnet" {
-  vpc_id                  = aws_vpc.strapi_vpc.id
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "subnet" {
+  vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
-  tags = {
-    Name = "strapi-subnet"
-  }
 }
 
-# Create Internet Gateway
-resource "aws_internet_gateway" "strapi_igw" {
-  vpc_id = aws_vpc.strapi_vpc.id
-  tags = {
-    Name = "strapi-igw"
-  }
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
 }
 
-# Create Route Table
-resource "aws_route_table" "strapi_rt" {
-  vpc_id = aws_vpc.strapi_vpc.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.strapi_igw.id
-  }
-  tags = {
-    Name = "strapi-rt"
-  }
-}
-
-# Associate Subnet with Route Table
-resource "aws_route_table_association" "strapi_rta" {
-  subnet_id      = aws_subnet.strapi_subnet.id
-  route_table_id = aws_route_table.strapi_rt.id
-}
-
-# Security Group for SSH and HTTP
-resource "aws_security_group" "strapi_sg" {
-  name        = "strapi-sg"
-  description = "Allow SSH and HTTP"
-  vpc_id      = aws_vpc.strapi_vpc.id
+resource "aws_security_group" "ecs_sg" {
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    description = "Allow SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow HTTP"
-    from_port   = 80
-    to_port     = 80
+    from_port   = 1337
+    to_port     = 1337
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description = "Allow all outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
 
-  tags = {
-    Name = "strapi-sg"
+resource "aws_ecs_cluster" "strapi_cluster" {
+  name = "strapi-cluster"
+}
+
+resource "aws_ecs_task_definition" "strapi_task" {
+  family                   = "strapi-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+
+  execution_role_arn = aws_iam_role.ecs_task_exec.arn
+  container_definitions = jsonencode([
+    {
+      name      = "strapi"
+      image     = var.image_url
+      essential = true
+      portMappings = [
+        {
+          containerPort = 1337
+          hostPort      = 1337
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_iam_role" "ecs_task_exec" {
+  name = "ecsTaskExecutionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_exec_policy" {
+  role       = aws_iam_role.ecs_task_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_ecs_service" "strapi_service" {
+  name            = "strapi-service"
+  cluster         = aws_ecs_cluster.strapi_cluster.id
+  task_definition = aws_ecs_task_definition.strapi_task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets         = [aws_subnet.subnet.id]
+    security_groups = [aws_security_group.ecs_sg.id]
+    assign_public_ip = true
   }
 }
-
-# EC2 Key Pair - You must create this in AWS Console or import
-resource "aws_key_pair" "strapi_key" {
-key_name   = "strapi-key-2"
-public_key = file("${path.module}/strapi-key.pub")
-
-}
-
-# Launch EC2 Instance
-resource "aws_instance" "strapi_ec2" {
-  ami                         = "ami-053b0d53c279acc90" # Ubuntu 22.04 LTS in us-east-1
-  instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.strapi_subnet.id
-  vpc_security_group_ids      = [aws_security_group.strapi_sg.id]
-  key_name                    = aws_key_pair.strapi_key.key_name
-  associate_public_ip_address = true
-
-  user_data = <<-EOF
-              #!/bin/bash
-              apt update -y
-              apt install docker.io -y
-              systemctl start docker
-              docker run -d -p 1337:1337 praneetz/strapi-app:latest
-              EOF
-
-  tags = {
-    Name = "strapi-ec2"
-  }
-}
-
-
