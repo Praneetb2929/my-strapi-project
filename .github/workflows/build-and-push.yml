@@ -29,7 +29,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/strapi-repo:${{ env.TAG }}
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/strapi-app:${{ env.TAG }}
           docker build -t $IMAGE_URI ./docker
           docker push $IMAGE_URI
           echo "image_url=$IMAGE_URI" > image.txt
