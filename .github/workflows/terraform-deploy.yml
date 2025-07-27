@@ -2,9 +2,11 @@ name: Deploy with Terraform
 
 on:
   workflow_run:
-    workflows: ["Build and Push to ECR"]  # Use exact name of your build workflow 
+    workflows: ["Build and Push to ECR"]
     types:
       - completed
+    branches:
+      - main
 jobs:
   deploy:
     runs-on: ubuntu-latest
