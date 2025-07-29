@@ -1,60 +1,51 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_ecr_repository" "strapi" {
-  name = "strapi-repo"
+  name = "strapi-app"
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_cloudwatch_log_group" "ecs_strapi" {
+  name              = "/ecs/strapi"
+  retention_in_days = 7
 }
 
-resource "aws_subnet" "subnet" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
+resource "aws_iam_role" "ecs_task_execution" {
+  name = "ecsTaskExecutionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
 }
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_security_group" "ecs_sg" {
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 1337
-    to_port     = 1337
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_ecs_cluster" "strapi_cluster" {
+resource "aws_ecs_cluster" "strapi" {
   name = "strapi-cluster"
 }
 
-resource "aws_ecs_task_definition" "strapi_task" {
+resource "aws_ecs_task_definition" "strapi" {
   family                   = "strapi-task"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
 
-  execution_role_arn = aws_iam_role.ecs_task_exec.arn
   container_definitions = jsonencode([
     {
       name      = "strapi"
-      image     = var.image_url
+      image     = "<ECR_IMAGE_URI>"
       essential = true
       portMappings = [
         {
@@ -62,40 +53,97 @@ resource "aws_ecs_task_definition" "strapi_task" {
           hostPort      = 1337
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_strapi.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "ecs/strapi"
+        }
+      }
     }
   ])
 }
 
-resource "aws_iam_role" "ecs_task_exec" {
-  name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
+resource "aws_cloudwatch_dashboard" "ecs_dashboard" {
+  dashboard_name = "StrapiDashboard"
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type = "metric",
+        x = 0,
+        y = 0,
+        width = 12,
+        height = 6,
+        properties = {
+          metrics = [["ECS/ContainerInsights", "CPUUtilization", "ClusterName", aws_ecs_cluster.strapi.name]],
+          view = "timeSeries",
+          stacked = false,
+          region = var.aws_region,
+          title = "CPU Utilization"
+        }
+      },
+      {
+        type = "metric",
+        x = 0,
+        y = 6,
+        width = 12,
+        height = 6,
+        properties = {
+          metrics = [["ECS/ContainerInsights", "MemoryUtilization", "ClusterName", aws_ecs_cluster.strapi.name]],
+          view = "timeSeries",
+          stacked = false,
+          region = var.aws_region,
+          title = "Memory Utilization"
+        }
+      },
+      {
+        type = "metric",
+        x = 0,
+        y = 12,
+        width = 12,
+        height = 6,
+        properties = {
+          metrics = [["ECS/ContainerInsights", "RunningTaskCount", "ClusterName", aws_ecs_cluster.strapi.name]],
+          view = "timeSeries",
+          stacked = false,
+          region = var.aws_region,
+          title = "Task Count"
+        }
+      },
+      {
+        type = "metric",
+        x = 0,
+        y = 18,
+        width = 12,
+        height = 6,
+        properties = {
+          metrics = [
+            ["ECS/ContainerInsights", "NetworkRxBytes", "ClusterName", aws_ecs_cluster.strapi.name],
+            ["ECS/ContainerInsights", "NetworkTxBytes", "ClusterName", aws_ecs_cluster.strapi.name]
+          ],
+          view = "timeSeries",
+          stacked = false,
+          region = var.aws_region,
+          title = "Network In/Out"
+        }
       }
-      Action = "sts:AssumeRole"
-    }]
+    ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_exec_policy" {
-  role       = aws_iam_role.ecs_task_exec.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-resource "aws_ecs_service" "strapi_service" {
-  name            = "strapi-service"
-  cluster         = aws_ecs_cluster.strapi_cluster.id
-  task_definition = aws_ecs_task_definition.strapi_task.arn
-  launch_type     = "FARGATE"
-  desired_count   = 1
-
-  network_configuration {
-    subnets         = [aws_subnet.subnet.id]
-    security_groups = [aws_security_group.ecs_sg.id]
-    assign_public_ip = true
+resource "aws_cloudwatch_metric_alarm" "high_cpu_alarm" {
+  alarm_name          = "HighCPUUtilization"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "ECS/ContainerInsights"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "Triggered when CPU exceeds 80%"
+  dimensions = {
+    ClusterName = aws_ecs_cluster.strapi.name
   }
 }
+

@@ -7,35 +7,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to ECR
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Generate image tag
-        id: tag
-        run: echo "TAG=$(date +%s)" >> $GITHUB_ENV
-
-      - name: Build and push Docker image
+      - name: Build & Push
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/strapi-app:${{ env.TAG }}
-          docker build -t $IMAGE_URI ./docker
-          docker push $IMAGE_URI
-          echo "image_url=$IMAGE_URI" > image.txt
-
-      - name: Upload image info
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-info
-          path: image.txt
+          docker build -t strapi-app .
+          docker tag strapi-app:latest praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
+          docker push praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
