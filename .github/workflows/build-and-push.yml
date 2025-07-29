@@ -23,6 +23,6 @@ jobs:
 
       - name: Build & Push
         run: |
-          docker build -t strapi-app .
+          docker build -t strapi-app -f docker/Dockerfile .
           docker tag strapi-app:latest praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
           docker push praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
