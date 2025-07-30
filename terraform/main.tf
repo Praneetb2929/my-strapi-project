@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 resource "aws_ecr_repository" "strapi" {
   name = "strapi-app"
 }
@@ -34,6 +38,17 @@ resource "aws_ecs_cluster" "strapi" {
   name = "strapi-cluster"
 }
 
+resource "aws_ecs_cluster_capacity_providers" "fargate_spot_provider" {
+  cluster_name = aws_ecs_cluster.strapi.name
+
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
+}
+
 resource "aws_ecs_task_definition" "strapi" {
   family                   = "strapi-task"
   requires_compatibilities = ["FARGATE"]
@@ -63,6 +78,28 @@ resource "aws_ecs_task_definition" "strapi" {
       }
     }
   ])
+}
+
+resource "aws_ecs_service" "strapi" {
+  name            = "strapi-service"
+  cluster         = aws_ecs_cluster.strapi.id
+  task_definition = aws_ecs_task_definition.strapi.arn
+  launch_type     = "FARGATE"
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
+
+  desired_count = 1
+
+  network_configuration {
+    subnets         = var.subnet_ids
+    assign_public_ip = true
+    security_groups = [var.security_group_id]
+  }
+
+  depends_on = [aws_ecs_cluster_capacity_providers.fargate_spot_provider]
 }
 
 resource "aws_cloudwatch_dashboard" "ecs_dashboard" {
@@ -146,4 +183,3 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu_alarm" {
     ClusterName = aws_ecs_cluster.strapi.name
   }
 }
-

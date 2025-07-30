@@ -1,9 +1,18 @@
 variable "aws_region" {
-  description = "AWS region to deploy resources"
-  type        = string
-  default     = "us-east-1"
+  default = "us-east-1"
 }
+
 variable "image_url" {
-  description = "Docker image URI to deploy"
+  description = "URL of the Docker image in ECR"
   type        = string
+}
+
+variable "subnet_ids" {
+  type        = list(string)
+  description = "List of subnet IDs"
+}
+
+variable "security_group_id" {
+  type        = string
+  description = "Security group ID for the ECS service"
 }
