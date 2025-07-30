@@ -41,6 +41,16 @@ jobs:
           terraform import aws_iam_role.ecs_task_execution ecsTaskExecutionRole || echo "IAM Role already managed"
         working-directory: terraform
 
+      - name: Import existing ECS Cluster
+        run: |
+          terraform import aws_ecs_cluster.strapi strapi-cluster || echo "ECS cluster already managed"
+        working-directory: terraform
+
+      - name: Import existing ECS Service
+        run: |
+          terraform import aws_ecs_service.strapi strapi-cluster/strapi-service || echo "ECS service already managed"
+        working-directory: terraform
+
       - name: Terraform Plan
         run: terraform plan
         working-directory: terraform
