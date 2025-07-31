@@ -1,11 +1,7 @@
-output "ecr_repository_url" {
-  value = aws_ecr_repository.strapi.repository_url
+output "alb_dns" {
+  value = aws_lb.strapi.dns_name
 }
 
-output "ecs_cluster_name" {
+output "ecs_cluster" {
   value = aws_ecs_cluster.strapi.name
 }
-
-output "task_definition_arn" {
-  value = aws_ecs_task_definition.strapi.arn
-}  

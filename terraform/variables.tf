@@ -1,18 +1,26 @@
-variable "aws_region" {
-  default = "us-east-1"
-}
-
-variable "image_url" {
-  description = "URL of the Docker image in ECR"
+variable "vpc_id" {
+  description = "The ID of the VPC"
   type        = string
 }
 
-variable "subnet_ids" {
+variable "subnets" {
+  description = "List of subnet IDs in the VPC"
   type        = list(string)
-  description = "List of subnet IDs"
 }
 
-variable "security_group_id" {
+variable "strapi_image_url" {
+  description = "Full image URL (e.g., <account>.dkr.ecr.<region>.amazonaws.com/strapi-app:tag)"
   type        = string
-  description = "Security group ID for the ECS service"
+}
+
+variable "strapi_cpu" {
+  description = "CPU units for the Strapi task"
+  type        = string
+  default     = "512"
+}
+
+variable "strapi_memory" {
+  description = "Memory (in MiB) for the Strapi task"
+  type        = string
+  default     = "1024"
 }

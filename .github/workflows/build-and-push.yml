@@ -7,6 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ECR_REGISTRY: 607700977843.dkr.ecr.us-east-1.amazonaws.com
+      IMAGE_REPO_NAME: strapi-app
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -19,10 +23,14 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 607700977843.dkr.ecr.us-east-1.amazonaws.com
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Extract commit SHA
+        id: vars
+        run: echo "SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build & Push
         run: |
-          docker build -t strapi-app -f docker/Dockerfile .
-          docker tag strapi-app:latest praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
-          docker push praneetz.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
+          docker build -t $ECR_REGISTRY/$IMAGE_REPO_NAME:$SHA -f docker/Dockerfile .
+          docker push $ECR_REGISTRY/$IMAGE_REPO_NAME:$SHA
+          echo "::set-output name=image::$ECR_REGISTRY/$IMAGE_REPO_NAME:$SHA"
