@@ -2,18 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "subnets" {
-  type = list(string)
-}
-
-variable "strapi_cpu" {
-  default = "512"
-}
-
-variable "strapi_memory" {
-  default = "1024"
-}
-
 # ECS Cluster
 resource "aws_ecs_cluster" "strapi" {
   name = "strapi-cluster"
@@ -189,7 +177,7 @@ resource "aws_iam_role" "codedeploy" {
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
+    Statement = [ {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
