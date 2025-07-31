@@ -2,14 +2,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "vpc_id" {}
 variable "subnets" {
   type = list(string)
 }
-variable "strapi_image_url" {}
+
 variable "strapi_cpu" {
   default = "512"
 }
+
 variable "strapi_memory" {
   default = "1024"
 }

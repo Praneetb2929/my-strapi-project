@@ -1,26 +1,24 @@
 variable "vpc_id" {
-  description = "The ID of the VPC"
+  description = "VPC ID"
   type        = string
 }
 
 variable "subnets" {
-  description = "List of subnet IDs in the VPC"
+  description = "List of subnet IDs"
   type        = list(string)
 }
 
 variable "strapi_image_url" {
-  description = "Full image URL (e.g., <account>.dkr.ecr.<region>.amazonaws.com/strapi-app:tag)"
+  description = "ECR image URL for Strapi app"
   type        = string
 }
 
 variable "strapi_cpu" {
-  description = "CPU units for the Strapi task"
-  type        = string
-  default     = "512"
+  description = "CPU units for ECS task"
+  type        = number
 }
 
 variable "strapi_memory" {
-  description = "Memory (in MiB) for the Strapi task"
-  type        = string
-  default     = "1024"
+  description = "Memory for ECS task"
+  type        = number
 }
