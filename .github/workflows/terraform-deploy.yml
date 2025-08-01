@@ -62,6 +62,11 @@ jobs:
         working-directory: terraform
         continue-on-error: true
 
+      - name: Import CodeDeploy App
+        run: terraform import aws_codedeploy_app.strapi StrapiApp
+        working-directory: terraform
+        continue-on-error: true
+
       - name: Import IAM Role - ecsTaskExecutionRole
         run: terraform import aws_iam_role.ecs_task_execution ecsTaskExecutionRole
         working-directory: terraform
