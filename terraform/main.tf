@@ -2,6 +2,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "random_id" "suffix" {
+  byte_length = 2
+}
+
 # ECS Cluster
 resource "aws_ecs_cluster" "strapi" {
   name = "strapi-cluster"
@@ -9,7 +13,7 @@ resource "aws_ecs_cluster" "strapi" {
 
 # ALB Security Group
 resource "aws_security_group" "alb_sg" {
-  name        = "strapi-alb-sg"
+  name        = "strapi-alb-sg-${random_id.suffix.hex}"
   description = "Allow HTTP/HTTPS"
   vpc_id      = var.vpc_id
 
@@ -37,7 +41,7 @@ resource "aws_security_group" "alb_sg" {
 
 # ECS Security Group
 resource "aws_security_group" "ecs_sg" {
-  name        = "strapi-ecs-sg"
+  name        = "strapi-ecs-sg-${random_id.suffix.hex}"
   description = "Allow ALB to ECS traffic"
   vpc_id      = var.vpc_id
 
@@ -99,7 +103,7 @@ resource "aws_iam_role" "ecs_task_execution" {
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
+    Statement = [ {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
@@ -123,19 +127,15 @@ resource "aws_ecs_task_definition" "strapi" {
   memory                   = var.strapi_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
 
-  container_definitions = jsonencode([
-    {
-      name      = "strapi"
-      image     = var.strapi_image_url
-      essential = true
-      portMappings = [
-        {
-          containerPort = 1337
-          protocol      = "tcp"
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "strapi"
+    image     = var.strapi_image_url
+    essential = true
+    portMappings = [{
+      containerPort = 1337
+      protocol      = "tcp"
+    }]
+  }])
 }
 
 # ECS Service with CodeDeploy
@@ -189,7 +189,7 @@ resource "aws_iam_role" "codedeploy" {
 
 resource "aws_iam_role_policy_attachment" "codedeploy_attach" {
   role       = aws_iam_role.codedeploy.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
 # Deployment Group
@@ -242,3 +242,4 @@ resource "aws_codedeploy_deployment_group" "strapi" {
     aws_ecs_service.strapi
   ]
 }
+
