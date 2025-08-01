@@ -38,7 +38,3 @@ variable "private_subnets" {
   type        = list(string)
 }
 
-variable "existing_task_definition" {
-  description = "The ARN or family of the existing ECS task definition"
-  type        = string
-}
