@@ -163,7 +163,7 @@ resource "aws_ecs_service" "strapi" {
   name            = "strapi-service"
   cluster         = aws_ecs_cluster.strapi.id
   launch_type     = "FARGATE"
-  task_definition = var.existing_task_definition
+
 
   deployment_controller {
     type = "CODE_DEPLOY"
