@@ -58,7 +58,7 @@ jobs:
         continue-on-error: true
 
       - name: Import ALB Security Group
-        run: terraform import aws_security_group.alb_sg sg-0c3d223bcf1370d82
+        run: terraform import aws_security_group.alb_sg sg-02572b17993127d6c
         working-directory: terraform
         continue-on-error: true
 
