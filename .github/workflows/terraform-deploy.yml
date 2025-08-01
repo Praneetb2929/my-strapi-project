@@ -32,48 +32,18 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      # Imports for existing resources still needed (optional but helpful for idempotency)
-      - name: Import ALB
-        run: terraform import aws_lb.strapi arn:aws:elasticloadbalancing:us-east-1:607700977843:loadbalancer/app/strapi-alb/653ce13d206cc605
+      # Optional: Import existing resources only if not in Terraform state
+      - name: Import existing AWS resources (Optional)
+        run: |
+          terraform import aws_lb.strapi arn:aws:elasticloadbalancing:us-east-1:607700977843:loadbalancer/app/strapi-alb/653ce13d206cc605 || true
+          terraform import aws_lb_listener.http arn:aws:elasticloadbalancing:us-east-1:607700977843:listener/app/strapi-alb/653ce13d206cc605/a4ca562d1d60c43a || true
+          terraform import aws_ecs_cluster.strapi strapi-cluster || true
+          terraform import aws_security_group.alb_sg sg-02572b17993127d6c || true
+          terraform import aws_codedeploy_app.strapi StrapiApp || true
+          terraform import aws_iam_role.ecs_task_execution ecsTaskExecutionRole || true
+          terraform import aws_iam_role.codedeploy CodeDeployServiceRole || true
+          terraform import aws_ecs_service.strapi strapi-cluster/strapi-service || true
         working-directory: terraform
-        continue-on-error: true
-
-      - name: Import ALB Listener
-        run: terraform import aws_lb_listener.http arn:aws:elasticloadbalancing:us-east-1:607700977843:listener/app/strapi-alb/653ce13d206cc605/a4ca562d1d60c43a
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import ECS Cluster
-        run: terraform import aws_ecs_cluster.strapi strapi-cluster
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import ALB Security Group
-        run: terraform import aws_security_group.alb_sg sg-02572b17993127d6c
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import CodeDeploy App
-        run: terraform import aws_codedeploy_app.strapi StrapiApp
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import IAM Role - ecsTaskExecutionRole
-        run: terraform import aws_iam_role.ecs_task_execution ecsTaskExecutionRole
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import IAM Role - CodeDeployServiceRole
-        run: terraform import aws_iam_role.codedeploy CodeDeployServiceRole
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import ECS Service
-        run: terraform import aws_ecs_service.strapi strapi-cluster/strapi-service
-        working-directory: terraform
-        continue-on-error: true
-
-      # ⚠️ Removed target group imports here
 
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.TF_VAR_image_tag }}"
@@ -82,4 +52,3 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="image_tag=${{ env.TF_VAR_image_tag }}"
         working-directory: terraform
-
