@@ -32,6 +32,11 @@ jobs:
         run: terraform init
         working-directory: terraform
 
+      - name: Terraform Import ALB
+        run: terraform import aws_lb.strapi strapi-alb
+        working-directory: terraform
+        continue-on-error: true 
+
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.TF_VAR_image_tag }}"
         working-directory: terraform
