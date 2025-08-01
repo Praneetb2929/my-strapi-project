@@ -188,7 +188,7 @@ resource "aws_ecs_service" "strapi" {
   }
 
   # Ensure listener is ready before ECS service creation
-  depends_on = [aws_lb_listener.frontend]
+  depends_on = [aws_lb_listener.http]
 }
 
 # CodeDeploy Application
