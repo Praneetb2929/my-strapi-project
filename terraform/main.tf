@@ -69,21 +69,41 @@ resource "aws_lb" "strapi" {
   subnets            = var.subnets
 }
 
-# Target Groups
+# Target Groups with unique names
 resource "aws_lb_target_group" "blue" {
-  name        = "strapi-blue"
+  name        = "strapi-blue-${random_id.suffix.hex}"
   port        = 1337
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc_id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200-399"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 }
 
 resource "aws_lb_target_group" "green" {
-  name        = "strapi-green"
+  name        = "strapi-green-${random_id.suffix.hex}"
   port        = 1337
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc_id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200-399"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 }
 
 # Listener
@@ -247,5 +267,4 @@ resource "aws_codedeploy_deployment_group" "strapi" {
     aws_ecs_service.strapi
   ]
 }
-
 
