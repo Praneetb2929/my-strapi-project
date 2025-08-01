@@ -184,7 +184,12 @@ resource "aws_ecs_service" "strapi" {
 
   # Let CodeDeploy handle task definition updates
   lifecycle {
-    ignore_changes = [task_definition]
+    ignore_changes = [
+      task_definition,
+      desired_count,
+      network_configuration,
+      load_balancer
+    ]
   }
 
   # Ensure listener is ready before ECS service creation
