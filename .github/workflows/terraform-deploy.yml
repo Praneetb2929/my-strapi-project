@@ -33,22 +33,22 @@ jobs:
         working-directory: terraform
 
       - name: Import ALB
-        run: terraform import aws_lb.strapi arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/strapi-alb/abcd1234efgh5678
+        run: terraform import aws_lb.strapi arn:aws:elasticloadbalancing:us-east-1:607700977843:loadbalancer/app/strapi-alb/653ce13d206cc605
         working-directory: terraform
         continue-on-error: true
 
       - name: Import Blue Target Group
-        run: terraform import aws_lb_target_group.blue arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/strapi-blue/xyz
+        run: terraform import aws_lb_target_group.blue arn:aws:elasticloadbalancing:us-east-1:607700977843:targetgroup/strapi-blue/84a64c84e2c91971
         working-directory: terraform
         continue-on-error: true
 
       - name: Import Green Target Group
-        run: terraform import aws_lb_target_group.green arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/strapi-green/abc
+        run: terraform import aws_lb_target_group.green arn:aws:elasticloadbalancing:us-east-1:607700977843:targetgroup/strapi-green/c6f16a5ad8008a4f
         working-directory: terraform
         continue-on-error: true
 
       - name: Import ALB Listener
-        run: terraform import aws_lb_listener.http arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/strapi-alb/abcd1234efgh5678/abcd1234
+        run: terraform import aws_lb_listener.http arn:aws:elasticloadbalancing:us-east-1:607700977843:listener/app/strapi-alb/653ce13d206cc605/a4ca562d1d60c43a
         working-directory: terraform
         continue-on-error: true
 
@@ -67,15 +67,6 @@ jobs:
         working-directory: terraform
         continue-on-error: true
 
-      - name: Import CodeDeploy Application
-        run: terraform import aws_codedeploy_app.strapi strapi-codedeploy-app
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import CodeDeploy Deployment Group
-        run: terraform import aws_codedeploy_deployment_group.strapi strapi-codedeploy-app/strapi-deployment-group
-        working-directory: terraform
-        continue-on-error: true
 
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.TF_VAR_image_tag }}"
