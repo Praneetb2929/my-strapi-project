@@ -57,17 +57,22 @@ jobs:
         working-directory: terraform
         continue-on-error: true
 
-      - name: Import ECS Service
-        run: terraform import aws_ecs_service.strapi strapi-cluster/strapi-service
+      - name: Import ALB Security Group
+        run: terraform import aws_security_group.alb_sg sg-0174e95e5ea4e1b7b
         working-directory: terraform
         continue-on-error: true
 
-      - name: Import ECS Task Definition
-        run: terraform import aws_ecs_task_definition.strapi strapi:5
+      - name: Import IAM Role - ecsTaskExecutionRole
+        run: terraform import aws_iam_role.ecs_task_execution ecsTaskExecutionRole
         working-directory: terraform
         continue-on-error: true
 
+      - name: Import IAM Role - CodeDeployServiceRole
+        run: terraform import aws_iam_role.codedeploy CodeDeployServiceRole
+        working-directory: terraform
+        continue-on-error: true
 
+        
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.TF_VAR_image_tag }}"
         working-directory: terraform
