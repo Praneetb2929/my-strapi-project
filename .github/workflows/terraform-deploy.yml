@@ -68,6 +68,11 @@ jobs:
         working-directory: terraform
         continue-on-error: true
 
+      - name: Import ECS Service
+        run: terraform import aws_ecs_service.strapi strapi-cluster/strapi-service
+        working-directory: terraform
+        continue-on-error: true
+
       # ⚠️ Removed target group imports here
 
       - name: Terraform Plan
