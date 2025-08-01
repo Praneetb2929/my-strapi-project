@@ -162,17 +162,17 @@ resource "aws_ecs_task_definition" "strapi" {
 resource "aws_ecs_service" "strapi" {
   name            = "strapi-service"
   cluster         = aws_ecs_cluster.strapi.id
-  task_definition = aws_ecs_task_definition.strapi.arn
   launch_type     = "FARGATE"
-  desired_count   = 1
 
   deployment_controller {
     type = "CODE_DEPLOY"
   }
 
+  desired_count = 1
+
   network_configuration {
-    subnets         = var.subnets
-    security_groups = [aws_security_group.ecs_sg.id]
+    subnets         = var.private_subnets
+    security_groups = [aws_security_group.ecs.id]
     assign_public_ip = true
   }
 
@@ -182,7 +182,7 @@ resource "aws_ecs_service" "strapi" {
     container_port   = 1337
   }
 
-  depends_on = [aws_lb_listener.http]
+  # NO task_definition here — CodeDeploy will manage updates
 }
 
 # CodeDeploy Application
