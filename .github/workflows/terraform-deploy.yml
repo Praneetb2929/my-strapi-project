@@ -32,18 +32,9 @@ jobs:
         run: terraform init
         working-directory: terraform
 
+      # Imports for existing resources still needed (optional but helpful for idempotency)
       - name: Import ALB
         run: terraform import aws_lb.strapi arn:aws:elasticloadbalancing:us-east-1:607700977843:loadbalancer/app/strapi-alb/653ce13d206cc605
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import Blue Target Group
-        run: terraform import aws_lb_target_group.blue arn:aws:elasticloadbalancing:us-east-1:607700977843:targetgroup/strapi-blue/84a64c84e2c91971
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Import Green Target Group
-        run: terraform import aws_lb_target_group.green arn:aws:elasticloadbalancing:us-east-1:607700977843:targetgroup/strapi-green/c6f16a5ad8008a4f
         working-directory: terraform
         continue-on-error: true
 
@@ -77,7 +68,8 @@ jobs:
         working-directory: terraform
         continue-on-error: true
 
-        
+      # ⚠️ Removed target group imports here
+
       - name: Terraform Plan
         run: terraform plan -var="image_tag=${{ env.TF_VAR_image_tag }}"
         working-directory: terraform
