@@ -8,3 +8,8 @@ subnets            = [
 ]
 strapi_cpu         = 512
 strapi_memory      = 1024
+private_subnets            = [
+  "subnet-07a4905e2c6c810a2",
+  "subnet-0293611cdd57a119e",
+  "subnet-08e1fcd11b3a0f9d4"
+]

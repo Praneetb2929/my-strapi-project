@@ -32,3 +32,8 @@ variable "strapi_memory" {
   type        = number
   description = "Memory (in MiB) for ECS task"
 }
+
+variable "private_subnets" {
+  description = "List of private subnet IDs for ECS tasks"
+  type        = list(string)
+}
